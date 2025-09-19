@@ -35,7 +35,7 @@ src/main/java/com/rabbit_deals/RabbitDeals/
 
 2. **Clone o repositório:**
    ```sh
-   git clone <url-do-repo>
+   git clone https://github.com/RabbitDeals/rabbitdeals-api
    cd rabbitdeals-api
    ```
 
