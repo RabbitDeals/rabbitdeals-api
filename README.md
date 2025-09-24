@@ -1,88 +1,136 @@
-# rabbitdeals-api
 
-## Visão Geral
-A **rabbitdeals-api** é uma API REST desenvolvida em Java com Spring Boot, projetada para gerenciar promoções e produtos de forma eficiente, escalável e fácil de integrar com outros sistemas.
 
 ---
 
-## Funcionalidades Principais
-- Cadastro, consulta, atualização e remoção de produtos
-- Listagem paginada de produtos
-- Integração com mensageria (RabbitMQ)
-- Mapeamento DTO para entidades
-- Configuração de CORS
+# RabbitDeals API
+
+## Integrantes
+
+| Nome Completo                        | RA        |
+|----------------------                |-----------|
+| Alejandro castor da costa fadim      | 01241115  |
+| Felipe ferreira                      | 01241160  |
 
 ---
 
-## Estrutura do Projeto
+## Descrição dos Projetos
+
+Este repositório contém duas aplicações:
+
+- **Produtor**: Responsável por receber requisições HTTP e publicar mensagens na fila RabbitMQ.
+- **Consumidor**: Responsável por consumir as mensagens da fila RabbitMQ e processá-las.
+
+---
+
+## Configuração do RabbitMQ com Docker Compose
+
+O ambiente utiliza o **Docker Compose** para orquestrar os serviços, incluindo o RabbitMQ.
+
+### Exemplo de `docker-compose.yml`
+
+```yaml
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  produtor:
+    build: ./produtor
+    depends_on:
+      - rabbitmq
+
+  consumidor:
+    build: ./consumidor
+    depends_on:
+      - rabbitmq
 ```
-src/main/java/com/rabbit_deals/RabbitDeals/
-├── config/         # Configurações (CORS, RabbitMQ)
-├── domain/         # Entidades de domínio e DTOs
-├── infra/          # Repositórios e mapeadores
-├── messaging/      # Listeners de mensageria
-├── service/        # Regras de negócio
-└── web/            # Controllers REST
-```
+
+**Obs:** Ajuste os paths dos serviços conforme sua estrutura.
 
 ---
 
-## Como Rodar Localmente
-1. **Pré-requisitos:**
-   - Java 17+
-   - Maven 3.8+
-   - RabbitMQ rodando localmente (padrão: localhost:5672)
+## Como Enviar uma Mensagem de Teste (Endpoint do Produtor)
 
-2. **Clone o repositório:**
-   ```sh
-   git clone https://github.com/RabbitDeals/rabbitdeals-api
-   cd rabbitdeals-api
-   ```
-
-3. **Configure o ambiente:**
-   - Edite `src/main/resources/application.properties` conforme necessário.
-
-4. **Execute a aplicação:**
-   ```sh
-   ./mvnw spring-boot:run
-   ```
-   Ou no Windows:
-   ```sh
-   mvnw.cmd spring-boot:run
-   ```
+- **URL do endpoint de publicação:**
+  ```
+  POST http://localhost:8080/api/publish
+  ```
+- **Método HTTP:** `POST`
+- **Headers necessários:**
+  ```
+  Content-Type: application/json
+  ```
+- **Exemplo de JSON a ser enviado:**
+  ```json
+  {
+    "produto": "Celular",
+    "preco": 1500.00
+  }
+  ```
 
 ---
 
-## Endpoints Principais
-- `GET /produtos` — Lista produtos (paginação disponível)
-- `POST /produtos` — Cadastra novo produto
-- `PUT /produtos/{id}` — Atualiza produto
-- `DELETE /produtos/{id}` — Remove produto
+## Passo a Passo para Subir o Ambiente
+
+1. **Clone o repositório**
+    ```sh
+    git clone https://github.com/RabbitDeals/rabbitdeals-api.git
+    cd rabbitdeals-api
+    ```
+
+2. **Suba o ambiente com Docker Compose**
+    ```sh
+    docker compose up -d
+    ```
+
+3. **Acesse o RabbitMQ (caso queira visualizar as filas)**
+    - URL: [http://localhost:15672/](http://localhost:15672/)
+    - Usuário: `guest`
+    - Senha: `guest`
+
+4. **Teste o endpoint do produtor**
+    - Use o Postman, Insomnia ou curl:
+    ```sh
+    curl -X POST http://localhost:8080/api/publish \
+      -H "Content-Type: application/json" \
+      -d '{"produto":"Celular","preco":1500.00}'
+    ```
 
 ---
 
-## Mensageria (RabbitMQ)
-- Listener: `AcademiaListener`
-- Configuração: `RabbitConfig.java`
-- Mensagens recebidas são processadas e integradas ao fluxo de produtos
+## Como Verificar a Mensagem no Consumidor
+
+- O **Consumidor** expõe um endpoint para consultar as mensagens processadas:
+
+    ```
+    GET http://localhost:8081/api/mensagens
+    ```
+
+- **Exemplo de retorno esperado:**
+    ```json
+    [
+      {
+        "produto": "Celular",
+        "preco": 1500.00,
+        "status": "Recebido"
+      }
+    ]
+    ```
 
 ---
 
-## Testes
-- Testes unitários e de integração em `src/test/java/com/rabbit_deals/RabbitDeals/`
-- Para rodar:
-   ```sh
-   ./mvnw test
-   ```
+## Observações Importantes
+
+- **Todos os passos acima devem ser seguidos para validação da entrega.**
+- A ausência deste arquivo README.md **com nomes/RAs, explicação dos projetos e instruções** resultará em nota 0.
 
 ---
 
-## Dicas Rápidas
-- Use o profile `dev` para desenvolvimento local.
-- O mapeamento DTO facilita integração com frontends.
-- O projeto segue boas práticas de arquitetura em camadas.
-
----
-
-## Contato
-Dúvidas ou sugestões? Abra uma issue ou entre em contato com o mantenedor.
+Se precisar de ajustes para os endpoints, portas, nomes de campos ou exemplos, só avisar!
