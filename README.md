@@ -1,5 +1,8 @@
 # RabbitDeals API
 
+> **O professor autorizou que o produtor seja em Python** para seguir o escopo padrão do projeto.  
+> Estamos usando **Spring Boot** como consumidor 1 e **Python** como consumidor 2 (que envia mensagens para o Telegram).
+
 ## Integrantes
 
 | Nome Completo                        | RA        |
@@ -9,19 +12,21 @@
 
 ---
 
-## Descrição dos Projetos
+## Descrição do Projeto
 
-Este repositório contém o consumidor número 1 do nosso projeto feito em Java:
+Este repositório contém o **Consumidor 1** do projeto:
 
-- **Consumidor**: Responsável por consumir as mensagens da fila RabbitMQ e processá-las.
+- **Consumidor (Java/Spring Boot)**: Consome mensagens da fila RabbitMQ e processa os dados.
+
+> O produtor (Python) envia mensagens diretamente para o RabbitMQ.
 
 ---
 
 ## Configuração do RabbitMQ com Docker Compose
 
-O ambiente utiliza o **Docker Compose** para orquestrar os serviços, incluindo o RabbitMQ, tudo isso já está configurado na raiz do projeto.
+O ambiente utiliza **Docker Compose** para orquestrar RabbitMQ e MongoDB, já configurados na raiz do projeto.
 
-Para executar o projeto basta rodar o seguinte comando na sua máquina (é necessário ter o Docker Desktop instalado e rodando):
+Para rodar:
 
 ```sh
 docker-compose up --build
@@ -29,16 +34,16 @@ docker-compose up --build
 
 ---
 
-## Como Enviar uma Mensagem de Teste (via RabbitMQ)
+## Enviando Mensagens de Teste (via RabbitMQ)
 
-> **Observação:** Esta aplicação **não expõe um endpoint HTTP**. As mensagens são enviadas diretamente para a exchange do RabbitMQ usando o protocolo **AMQP**.
+> **Importante:** Não há endpoint HTTP para envio; as mensagens vão direto para a **exchange** via **AMQP** (Python).
 
 - **Host RabbitMQ:** localhost  
-- **Exchange:** categoria_exchange  
+- **Exchange:** `categoria_exchange`  
 - **Credenciais:** admin / admin  
 - **Protocolo:** AMQP  
 
-- **Exemplo de envio em Python (ilustrativo):**
+**Exemplo de envio em Python:**
 
 ```python
 import pika
@@ -51,9 +56,17 @@ channel = connection.channel()
 
 channel.exchange_declare(exchange='categoria_exchange', exchange_type='fanout')
 
-message = {"produto": "Celular", "preco": 1500.00}
-channel.basic_publish(exchange='categoria_exchange', routing_key='', body=json.dumps(message))
+produto_json = {
+    "titulo": "Halter Ajustável 20kg",
+    "vendedorNome": "Loja Fitness Pro",
+    "linkProduto": "https://www.exemplo.com.br/halter-ajustavel-20kg",
+    "preco": 299.90,
+    "avaliacao": 4.8,
+    "imagens": "https://www.exemplo.com.br/images/halter1.jpg",
+    "categoria": "Academia"
+}
 
+channel.basic_publish(exchange='categoria_exchange', routing_key='', body=json.dumps(produto_json))
 connection.close()
 ```
 
@@ -72,8 +85,9 @@ cd rabbitdeals-api
 docker-compose up -d
 ```
 
-3. **Teste o endpoint do produtor**
-- Acesse no navegador a URL para verificar os produtos cadastrados no sistema:
+3. **Verifique os produtos cadastrados**
+- Abra no navegador:
 ```
 http://localhost:8080/anuncios
 ```
+
